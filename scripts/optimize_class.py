@@ -11,6 +11,8 @@ import csv
 
 import tf2_ros
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class Fminsearch:
     def __init__(self, *args):
@@ -77,7 +79,8 @@ class Fminsearch:
     def do_optimise_T(self, t1, data = None):
 
         if data is None:
-            data = np.float32(self.data[4::5,:])
+            # data = np.float32(self.data[4::5,:])
+            data = self.data
         tf = np.asmatrix(self.tfs)
 
 
@@ -149,6 +152,37 @@ class Fminsearch:
         return f
 
 
+    def transformInputData(self, posquat, data = None):
+        if data is None:
+            data = self.data
+        data_tf = np.asmatrix(self.tfs)
+
+        data_pos = []
+        [l, m] = np.shape(data)
+        for row in data:
+            new_row = []
+            for i in row:
+                new_row.append(i)
+            new_row.append(1.)
+            data_pos.append(np.asarray(new_row))
+        data_pos = np.asmatrix(data_pos)
+
+        Tx = np.asmatrix(quaternion_matrix(posquat[3:]))
+        Tx[0:3, 3] = np.resize(posquat[0:3], (3,1))
+
+        [l, m] = np.shape(data_tf)
+        Teef = np.zeros((l,4,4))
+        for i in range(l):
+            Teef[i,:,:] = np.asmatrix(quaternion_matrix(np.asarray(data_tf)[i,3:]))
+            Teef[i,0:3,3] = np.asarray(data_tf)[i,0:3]
+
+        [l, m] = np.shape(data_pos)
+
+        for i in range(l):
+            Tglob = np.dot(Teef[i,:,:], Tx)
+            glob_1 = np.dot(Tglob, np.transpose(data_pos[i,:]))
+            self.txs_optimized[i,0:3] = np.transpose(glob_1[0:3])
+
 
     def dissipation(self, t1, data = None):
 
@@ -177,22 +211,23 @@ class Fminsearch:
 
         mtrx = self.txs_optimized.transpose()
         pos_vec = []
-        m,n,l = np.shape(mtrx)
-        for i in range(l):
-            m = mtrx[:,:,i]
-            pos = m[0:3,3]
-            quat = quaternion_from_matrix(m)
-            pos_quat = []
-            for p in pos:
-                pos_quat.append(p)
-            for q in quat:
-                pos_quat.append(q)
-            p_vec = pos_q_2_pos_vec(pos_quat)
-            pos_vec.append(p_vec)
-
+        m,n = np.shape(mtrx)
+        print (m,n)
+        for i in range(n):
+            m = mtrx[0:3,i]
+            # pos = m[0:3]
+            # quat = quaternion_from_matrix(m)
+            # pos_quat = []
+            # for p in pos:
+            #     pos_quat.append(p)
+            # for q in quat:
+            #     pos_quat.append(q)
+            # p_vec = pos_q_2_pos_vec(pos_quat)
+            # pos_vec.append(p_vec)
+            pos_vec.append(m)
 
         cm = np.asarray(pos_vec)
-        ax1.quiver(cm[:,0], cm[:,1], cm[:,2], cm[:,3], cm[:,4], cm[:,5], color=col)
+        ax1.scatter(cm[:,0], cm[:,1], cm[:,2], color=col)
 
 if __name__ == "__main__":
 
@@ -230,10 +265,11 @@ if __name__ == "__main__":
     print("dissipation with T optimized:")
     print(optim.dissipation(topt)/30.)
 
-
-    # p1 = [0,0,0]
-    # r1 = np.eye(3)
-
-    # optim.do_optimise_pos_random(p1,r1,10)
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    optim.transformInputData(topt)
+    optim.plot_inputs(ax)
+    plt.show()
 
     pass
