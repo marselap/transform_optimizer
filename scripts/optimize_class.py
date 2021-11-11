@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import numpy as np
 import scipy.optimize
 import scipy
@@ -98,8 +98,8 @@ class Fminsearch:
 
         # data = data[(0,1,2,4,5),:]
         # tf = tf[(0,1,2,4,5),:]
-        print data
-        print tf
+        print (data)
+        print (tf)
 
         objectiveFunLambda = lambda x: self.objectiveFunTransformation(x, data, tf)
 
@@ -233,12 +233,22 @@ if __name__ == "__main__":
 
 
     optim = Fminsearch()
-    optim.load_set("./poses_ex.txt", "./tfs_ex.txt")
+    #optim.load_set("/home/mars/catkin_ws/src/transform_optimizer/poses.txt", "/home/mars/catkin_ws/src/transform_optimizer/tfs.txt")
 
 
     t1 = np.asarray([-0.033,-0.017,0.075,0,0,0.7068252, 0.7073883])
-    # t1 = np.asarray([0.03,0,0.08,0,0,0., 1.])
-    # t1 = np.asarray([0,0,0,0,0,0,1])
+    t1 = np.asarray([0.06,0.05,0.1,0,0,0,1])
+    t1 = np.asarray([0.0,0.0,0.,0,0,0,1])
+    t1 = np.asarray([0.1,0.0,-0.13,0.5, 0.5, 0.5, 0.5])
+    
+
+#     t1 = np.asarray([
+#         0.04376476,
+#         -0.0373953,
+#         0.0398432  ,
+#        0.49698189,  0.48851869,  0.49611943,
+#   0.51790347])
+
     topt, f = optim.do_optimise_T(t1)
 
     q = topt[3:]
@@ -253,17 +263,17 @@ if __name__ == "__main__":
     print("dissipation with T optimized:")
     print(optim.dissipation(topt)/30.)
 
-    t1 = np.asarray([0,0,0,0,0,0,1])
-    topt, f = optim.do_optimise_T(t1)
-    q = topt[3:]
-    q /= np.linalg.norm(q)
-    topt[3:] = q
-    print(topt)
+    # t1 = np.asarray([0,0,0,0,0,0,1])
+    # topt, f = optim.do_optimise_T(t1)
+    # q = topt[3:]
+    # q /= np.linalg.norm(q)
+    # topt[3:] = q
+    # print(topt)
 
-    print("dissipation with T zero:")
-    print(optim.dissipation(t1)/30.)
-    print("dissipation with T optimized:")
-    print(optim.dissipation(topt)/30.)
+    # print("dissipation with T zero:")
+    # print(optim.dissipation(t1)/30.)
+    # print("dissipation with T optimized:")
+    # print(optim.dissipation(topt)/30.)
 
     from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure()
